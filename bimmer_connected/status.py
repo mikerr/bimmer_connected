@@ -6,6 +6,9 @@ import logging
 import json
 import os
 import time
+
+from math import radians, sin, cos, acos
+
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name, valid_regions
 from bimmer_connected.vehicle import VehicleViewDirection
@@ -51,6 +54,22 @@ def get_status(args) -> None:
         """
         print('E-Range: {} miles'.format(vehicle.state.remainingRangeElectricMls ))
         print('Battery: {}%'.format(vehicle.state.chargingLevelHv ))
+
+        position = vehicle.state.position
+
+        """ home location """ 
+        hlat = radians(53.429768)
+        hlon = radians(-2.757043)
+
+        lat = radians (position["lat"])
+        lon = radians (position["lon"])
+
+        dist = 6378 * acos(sin(hlat)*sin(lat) + cos(hlat)*cos(lat)*cos(hlon - lon))
+        dist = dist / miles
+        if dist > 0 :
+           print("Location: %.1f miles from home" % dist )
+        else :
+           print("Location: home")
 
 
 def _add_default_arguments(parser: argparse.ArgumentParser):
