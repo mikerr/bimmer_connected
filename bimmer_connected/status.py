@@ -7,12 +7,12 @@ import json
 import os
 import time
 
+from datetime import datetime
 from math import radians, sin, cos, acos
 
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name, valid_regions
 from bimmer_connected.vehicle import VehicleViewDirection
-
 
 def main() -> None:
     """Main function."""
@@ -39,27 +39,24 @@ def get_status(args) -> None:
     account.update_vehicle_states()
 
     for vehicle in account.vehicles:
-        print
+        print ()
         print(vehicle.name)
         """print('VIN: {}'.format(vehicle.vin))"""
-        miles = 1.609
+        miles = 1.609344
         mileage = int (vehicle.state.mileage / miles)
         print('mileage: {:0}'.format(mileage))
         
-        """
-        print('vehicle properties:')
-        print(json.dumps(vehicle.attributes, indent=4))
-        print('vehicle status:')
-        print(json.dumps(vehicle.state.attributes, indent=4))
-        """
-        print('E-Range: {} miles'.format(vehicle.state.remainingRangeElectricMls ))
+        maxRange = vehicle.state.maxRangeElectric / miles
+        range = vehicle.state.remainingRangeElectricMls
+
+        print('E-Range: {} miles'.format(range))
         print('Battery: {}%'.format(vehicle.state.chargingLevelHv ))
 
         position = vehicle.state.position
 
         """ home location """ 
-        hlat = radians(53.429768)
-        hlon = radians(-2.757043)
+        hlat = radians (53.429768)
+        hlon = radians (-2.757043)
 
         lat = radians (position["lat"])
         lon = radians (position["lon"])
@@ -71,6 +68,32 @@ def get_status(args) -> None:
         else :
            print("Location: home")
 
+        sinceCharge = round( maxRange - range,1)
+        print ("Distance since last charge: {} miles" .format(sinceCharge))
+
+        BASE_URL = 'https://{server}/webapi/v1'
+        VEHICLES_URL = BASE_URL + '/user/vehicles'
+        VEHICLE_VIN_URL = VEHICLES_URL + '/{vin}'
+        VEHICLE_TRIP_URL = VEHICLE_VIN_URL + '/statistics/lastTrip'
+        response = account.send_request(
+            VEHICLE_TRIP_URL.format(server=account.server_url, vin=vehicle.vin), logfilename='status',
+            params="")
+        lastTrip = response.json()['lastTrip']
+        print ()
+        print ("Last Trip:")
+
+        date = datetime.strptime(lastTrip['date'],'%Y-%m-%dT%H:%M:%S+0100')
+        print (date)
+        duration = lastTrip["duration"]
+        distance = lastTrip["totalDistance"]
+        distance = round (distance / miles ,1)
+        print ("{} miles in {} minutes" .format(distance,duration))
+
+	# convert kWh/100km to miles / kWh
+        mpk = round (100 / (lastTrip['avgElectricConsumption'] * miles ),2)
+        print ("{} mi/kWh" .format(mpk))
+
+        print ("Efficiency: {} /5.0" .format(lastTrip['efficiencyValue'] * 5.0))
 
 def _add_default_arguments(parser: argparse.ArgumentParser):
     """Add the default arguments username, password, region to the parser."""
