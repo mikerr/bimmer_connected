@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """Show nicely formatted status, mileage charge percent etc """
+# tweeter.py status <email> <password> rest_of_world
 
 import argparse
 import logging
@@ -10,22 +11,21 @@ import time
 
 from datetime import datetime
 from math import radians, sin, cos, acos
-import tweepy 
+import tweepy
 
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name, valid_regions
-  
-# personal details 
-consumer_key ="xxxxxxxxxxxx"
-consumer_secret ="xxxxxxxxxxxx"
-access_token ="xxxxxxxxxxxxxxxxxxxxxxxx"
-access_token_secret ="xxxxxxxxxxxx"
-  
+
+# personal details
+consumer_key ="xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+consumer_secret ="xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+access_token ="xxxxxxxxxxxxxxx"
+access_token_secret ="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
 
 def main() -> None:
     """Main function."""
-    logging.basicConfig(level=logging.CRITICAL) 
-
+    logging.basicConfig(level=logging.CRITICAL)
     parser = argparse.ArgumentParser(description='script to show nicely foramted status mileage etc ')
     subparsers = parser.add_subparsers(dest='cmd')
     subparsers.required = True
@@ -41,9 +41,6 @@ def main() -> None:
 def get_status(args) -> None:
     """Get the vehicle status."""
     account = ConnectedDriveAccount(args.username, args.password, get_region_from_name(args.region))
-    if args.lat and args.lng:
-        for vehicle in account.vehicles:
-            vehicle.set_observer_position(args.lat, args.lng)
     account.update_vehicle_states()
 
     for vehicle in account.vehicles:
@@ -53,19 +50,18 @@ def get_status(args) -> None:
         miles = 1.609344
         mileage = int (vehicle.state.mileage / miles)
         print('mileage: {:0}'.format(mileage))
-        
         maxRange = vehicle.state.maxRangeElectric / miles
         range = vehicle.state.remainingRangeElectricMls
 
         print('E-Range: {} miles'.format(range))
-        percent = vehicle.state.chargingLevelHv 
+        percent = vehicle.state.chargingLevelHv
         print('Battery: {}%'.format(percent))
 
         position = vehicle.state.position
 
-        """ home location """ 
-        hlat = radians (53.429768)
-        hlon = radians (-2.757043)
+        """ home location """
+        hlat = radians (53.0000)
+        hlon = radians (-2.0000)
 
         lat = radians (position["lat"])
         lon = radians (position["lon"])
@@ -96,30 +92,48 @@ def get_status(args) -> None:
         duration = lastTrip["duration"]
         distance = lastTrip["totalDistance"]
         distance = round (distance / miles ,1)
-        print ("{} miles in {} minutes" .format(distance,duration))
 
-	# convert kWh/100km to miles / kWh
-        mpk = round (100 / (lastTrip['avgElectricConsumption'] * miles ),2)
-        print ("{} mi/kWh" .format(mpk))
+        # convert kWh/100km to miles / kWh
+        mpk = round (100 / (lastTrip['avgElectricConsumption'] * miles ),1)
 
-        rating = lastTrip['efficiencyValue'] * 5.0
-        print ("Efficiency: {} /5.0" .format(rating))
+        rating = round (lastTrip['efficiencyValue'] * 5.0,1)
 
-        # authentication of consumer key and secret 
-        auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
-  
-        # authentication of access token and secret 
-        auth.set_access_token(access_token, access_token_secret) 
-        api = tweepy.API(auth) 
-  
-        # update the status 
+        # update the status
         status = "Last journey / status:\n"
         status += " 🚗 " + str(distance) + " miles in "+ str(duration) + " mins\n"
         status += " 🌍 "+ str(mpk) + " mi/kWh\n"
-        status += " 🔋 " + str(percent) + "% ("  + str(range) + "  miles)\n"
+        status += " 🔋 " + str(percent) + "% ("  + str(range) + " miles)\n"
         status += " 🛡️ " + str(rating) + "/5.0"
 
-        api.update_status(status)
+        print (status)
+
+        try:
+            f = open('date.txt','r')
+            lastdate = f.readline().strip()
+            f.close()
+        except FileNotFoundError:
+            lastdate = ""
+
+        print (lastdate, str(date))
+        if lastdate != str(date) :
+            print ("tweeting")
+            # authentication of consumer key and secret
+            auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+
+            # authentication of access token and secret
+            auth.set_access_token(access_token, access_token_secret)
+            api = tweepy.API(auth)
+
+
+            # make a note of the last tweet date & time
+            f = open("date.txt","w")
+            f.write (format(date))
+            f.close
+
+            try:
+                api.update_status(status)
+            except:
+                print ("tweet error (duplicate?)")
 
 def _add_default_arguments(parser: argparse.ArgumentParser):
     """Add the default arguments username, password, region to the parser."""
