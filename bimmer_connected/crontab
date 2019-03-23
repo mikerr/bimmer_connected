@@ -1,0 +1,1 @@
+*/5 * * * * /root/tweet.sh >/dev/null
