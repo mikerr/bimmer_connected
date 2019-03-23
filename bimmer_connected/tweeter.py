@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """Show nicely formatted status, mileage charge percent etc """
-# tweeter.py status <email> <password> rest_of_world
 
 import argparse
 import logging
@@ -43,7 +42,8 @@ def get_status(args) -> None:
     account = ConnectedDriveAccount(args.username, args.password, get_region_from_name(args.region))
     account.update_vehicle_states()
 
-    for vehicle in account.vehicles:
+
+ for vehicle in account.vehicles:
         print ()
         print(vehicle.name)
         """print('VIN: {}'.format(vehicle.vin))"""
@@ -60,8 +60,8 @@ def get_status(args) -> None:
         position = vehicle.state.position
 
         """ home location """
-        hlat = radians (53.0000)
-        hlon = radians (-2.0000)
+        hlat = radians (53.0)
+        hlon = radians (-2.0)
 
         lat = radians (position["lat"])
         lon = radians (position["lon"])
@@ -107,7 +107,7 @@ def get_status(args) -> None:
 
         print (status)
 
-        try:
+         try:
             f = open('date.txt','r')
             lastdate = f.readline().strip()
             f.close()
@@ -127,7 +127,7 @@ def get_status(args) -> None:
 
             # make a note of the last tweet date & time
             f = open("date.txt","w")
-            f.write (format(date))
+            f.write (format(date))            
             f.close
 
             try:
@@ -153,3 +153,7 @@ def _add_position_arguments(parser: argparse.ArgumentParser):
 
 if __name__ == '__main__':
     main()
+
+
+
+
