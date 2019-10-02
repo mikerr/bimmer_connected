@@ -1,4 +1,4 @@
 #!/bin/sh -e
 
-/root/tweeter.py status email password rest_of_world
+/root/bimmer_connected/bimmer_connected/tweeter.py status username password rest_of_world
 

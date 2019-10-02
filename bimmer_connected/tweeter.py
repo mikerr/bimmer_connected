@@ -16,10 +16,10 @@ from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name, valid_regions
 
 # personal details
-consumer_key ="xxxxxxxxxxxxxxxxxxxxxxxxxxx"
-consumer_secret ="xxxxxxxxxxxxxxxxxxxxxxxxxxx"
-access_token ="xxxxxxxxxxxxxxx"
-access_token_secret ="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+consumer_key =""
+consumer_secret =""
+access_token =""
+access_token_secret =""
 
 
 def main() -> None:
@@ -43,7 +43,7 @@ def get_status(args) -> None:
     account.update_vehicle_states()
 
 
- for vehicle in account.vehicles:
+    for vehicle in account.vehicles:
         print ()
         print(vehicle.name)
         """print('VIN: {}'.format(vehicle.vin))"""
@@ -63,11 +63,12 @@ def get_status(args) -> None:
         hlat = radians (53.0)
         hlon = radians (-2.0)
 
-        lat = radians (position["lat"])
-        lon = radians (position["lon"])
+        #lat = radians (position["lat"])
+        #lon = radians (position["lon"])
 
-        dist = 6378 * acos(sin(hlat)*sin(lat) + cos(hlat)*cos(lat)*cos(hlon - lon))
-        dist = dist / miles
+        #dist = 6378 * acos(sin(hlat)*sin(lat) + cos(hlat)*cos(lat)*cos(hlon - lon))
+        #dist = dist / miles
+        dist = 0
         if dist > 0 :
            print("Location: %.1f miles from home" % dist )
         else :
@@ -87,7 +88,7 @@ def get_status(args) -> None:
         print ()
         print ("Last Trip:")
 
-        date = datetime.strptime(lastTrip['date'],'%Y-%m-%dT%H:%M:%S+0100')
+        date = datetime.strptime(lastTrip['date'],'%Y-%m-%dT%H:%M:%S+0000')
         print (date)
         duration = lastTrip["duration"]
         distance = lastTrip["totalDistance"]
@@ -107,7 +108,7 @@ def get_status(args) -> None:
 
         print (status)
 
-         try:
+        try:
             f = open('date.txt','r')
             lastdate = f.readline().strip()
             f.close()
